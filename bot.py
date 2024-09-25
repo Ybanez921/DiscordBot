@@ -2,9 +2,9 @@ import os
 import random
 import requests
 import json
-import imgkit
 import urllib.request
 import asyncio
+from PIL import Image
 
 import discord
 from dotenv import load_dotenv
@@ -13,8 +13,8 @@ from discord.ext import commands
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 
-client = discord.Client()
-bot = commands.Bot(command_prefix='-')
+#client = discord.Client()
+bot = commands.Bot(command_prefix='-', intents=discord.Intents.all())
 
 
 
@@ -45,17 +45,25 @@ async def on_message(message):
         if num <= .20:
             await message.reply(file = discord.File('mr_swift.png'))
 
-    if 'swift' in message.content.lower():
+    if 'swift' in message.content.lower() and 'swifted' not in message.content.lower():
         await message.channel.send(file = discord.File('mr_swift.png'))
-
-    num = random.random()
     
-    if num < 0.05:
-        await message.channel.send(file = discord.File('selfie.jpg'))
-        await message.channel.send("Had to do it to 'em")
+    # if message.author.id == 310602518092840962:
+    #     await message.reply("I ain't reading allat but we :speaking_head::up::bangbang::bangbang::fire:")
+
+    if len(message.content) > 120:
+        await message.reply("I ain't reading allat but we :speaking_head::up::bangbang::bangbang::fire:")
+    
+    #if num < 0.05:
+       #await message.channel.send(file = discord.File('selfie.jpg'))
+        #await message.channel.send("Had to do it to 'em")
     await bot.process_commands(message)
 
-
+@bot.event
+async def on_message_delete(message):
+    if message.author.id == 988934440875069460:
+        await message.channel.send(file = discord.File('deepfried.jpg'))
+        await message.channel.send('GET SWIFTED :dash:')
 
 
     
@@ -89,7 +97,61 @@ async def numgame(context):
 @bot.command()
 async def ping(ctx):
 	await ctx.channel.send("pong")
+
+@bot.command()
+async def drawf(ctx):
+    attachment_url = ctx.message.attachments[0].url
+    file_request = requests.get(attachment_url)
+    #print(file_request.content.decode('ascii'))
+    commands = file_request.content.decode('ascii')
+    commands = commands.splitlines()
+    im = Image.open('draw.png')
+    w, h = im.size
+    for args in commands:
+        p = args.split(',')
+        x = int(p[0])
+        y = int(p[1])
+        color = p[2]
+
+        if x < 0 or x > w or y < 0 or y > h:
+            await ctx.send(f'Coordinates out of bounds, Image is {w} x {h}')
+            return
+
+        color = getcolor(color)
+        im.putpixel((x,y), color)
+
+    im.save('draw.png')
+    await ctx.send(file=discord.File('draw.png'))
+
+
+
     
+
+    
+@bot.command()
+async def draw(ctx, *args):
+    im = Image.open('draw.png')
+    w, h = im.size
+    for req in args:
+        p = req.split(',')
+        x = int(p[0])
+        y = int(p[1])
+        color = p[2]
+
+        if x < 0 or x > w or y < 0 or y > h:
+            await ctx.send(f'Coordinates out of bounds, Image is {w} x {h}')
+            return
+        
+        color = getcolor(color)
+        
+        im.putpixel((x,y), color)
+
+    im.save('draw.png')
+    await ctx.send(file=discord.File('draw.png'))
+    
+@bot.command()
+async def show(ctx):
+    await ctx.send(file=discord.File('draw.png'))
 
 @bot.command()
 async def recipe(ctx, *args):
@@ -140,7 +202,6 @@ async def recipe(ctx, *args):
 
 @bot.command()
 async def ask(ctx):
-    
     responses = ['It is certain', 'WIthout a doubt', 'Yes',
     'Ask again later', 'Better not tell you now', 'Concentrate and ask again',
     'No', 'Outlook not so good', 'Very doubtful']
@@ -175,6 +236,29 @@ def checkauth(author):
         else:
             return True
     return inner_check
+
+def getcolor(color):
+    if color == "red":
+        return (255, 0, 0)
+    elif color == "green":
+        return (0, 255, 0)
+    elif color == "blue":
+        return (0, 0, 255)
+    elif color == "yellow":
+        return (255,255,0)
+    elif color == "cyan":
+        return (0,255,255)   
+    elif color == "magenta":
+        return (255,0,255) 
+    elif color == "black":
+        return (0,0,0) 
+    elif color == "white":
+        return (255,255,255) 
+    elif color == "gray":
+        return (128,128,128) 
+    else:
+        print("Error: invalid color string.")
+        
 
 
 
